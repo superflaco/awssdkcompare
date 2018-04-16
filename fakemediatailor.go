@@ -3,7 +3,6 @@ package fakemediatailor
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/awserr"
 	"github.com/aws/aws-sdk-go-v2/aws/signer/v4"
@@ -51,7 +50,6 @@ func Unmarshal(req *aws.Request) {
 		data := buf.Bytes()
 		switch req.HTTPResponse.StatusCode {
 		case 200:
-			fmt.Println(string(data))
 			err := json.Unmarshal(data, req.Data)
 			if err != nil {
 				req.Error = awserr.New("SerializationError", "failed decoding JSON RPC response", err)
