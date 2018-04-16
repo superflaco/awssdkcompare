@@ -38,7 +38,12 @@ type MediaTailor struct {
 func Build(req *aws.Request) {
 	req.HTTPRequest.URL.Host = "api." + req.HTTPRequest.URL.Host
 	req.HTTPRequest.Header.Add("Content-Type", "application/json; charset=UTF-8")
-
+	if nil != req.Params {
+		body, bodyErr := json.Marshal(req.Params)
+		if nil == bodyErr {
+			req.SetReaderBody(bytes.NewReader(body))
+		}
+	}
 }
 
 func Unmarshal(req *aws.Request) {
@@ -125,6 +130,27 @@ func (c *MediaTailor) GetConfigRequest(config string) *aws.Request {
 	op := &aws.Operation{
 		Name:       opDescribeMTConfig,
 		HTTPMethod: "GET",
+		HTTPPath:   "/v1/config/account/" + config,
+	}
+	var mtconfig MediaTailorConfiguration
+	return c.newRequest(op, nil, &mtconfig)
+}
+
+func (c *MediaTailor) PutConfigRequest(config string, configBody MediaTailorConfiguration) *aws.Request {
+	op := &aws.Operation{
+		Name:       opDescribeMTConfig,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/v1/config/account/" + config,
+
+	}
+	var mtconfig MediaTailorConfiguration
+	return c.newRequest(op, &configBody, &mtconfig)
+}
+
+func (c *MediaTailor) DeleteConfigRequest(config string) *aws.Request {
+	op := &aws.Operation{
+		Name:       opDescribeMTConfig,
+		HTTPMethod: "DELETE",
 		HTTPPath:   "/v1/config/account/" + config,
 	}
 	var mtconfig MediaTailorConfiguration
