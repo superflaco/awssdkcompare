@@ -12,14 +12,14 @@ import (
 const opDescribeMTConfig = "GetConfig"
 
 type MediaTailorConfiguration struct {
-	AdDecisionServer     string `json:"adDecisionServer",omitempty`
-	OriginPrefix         string `json:"originPrefix",omitempty`
-	SlateURL             string `json:"slateURL",omitempty`
+	AdDecisionServer     string `json:"adDecisionServer,omitempty"`
+	OriginPrefix         string `json:"originPrefix,omitempty"`
+	SlateURL             string `json:"slateURL,omitempty"`
 	CDNContentSegmentURL string `json:"cdnContentSegmentURL,omitempty"`
 	CDNAdSegmentURL      string `json:"cdnAdSegmentURL,omitempty"`
-	HLSDiscSequence      bool   `json:"hlsDiscSequence",omitempty`
-	DashManifestPrefix   string `json:"dashManifestPrefix",omitempty`
-	PlaybackEndpoint     string `json:"playbackEndpoint",omitempty`
+	HLSDiscSequence      bool   `json:"hlsDiscSequence,omitempty"`
+	DashManifestPrefix   string `json:"dashManifestPrefix,omitempty"`
+	PlaybackEndpoint     string `json:"playbackEndpoint,omitempty"`
 }
 
 func (mtc MediaTailorConfiguration) String() string {
