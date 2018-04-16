@@ -12,12 +12,14 @@ import (
 const opDescribeMTConfig = "GetConfig"
 
 type MediaTailorConfiguration struct {
-	AdDecisionServer     string `json:"adDecisionServer"`
-	OriginPrefix         string `json:"originPrefix"`
-	SlateURL             string `json:"slateURL"`
-	CDNContentSegmentURL string `json:"cdnContentSegmentURL"`
-	CDNAdSegmentURL      string `json:"cdnAdSegmentURL"`
-	HLSDiscSequence      bool   `json:"hlsDiscSequence"`
+	AdDecisionServer     string `json:"adDecisionServer",omitempty`
+	OriginPrefix         string `json:"originPrefix",omitempty`
+	SlateURL             string `json:"slateURL",omitempty`
+	CDNContentSegmentURL string `json:"cdnContentSegmentURL,omitempty"`
+	CDNAdSegmentURL      string `json:"cdnAdSegmentURL,omitempty"`
+	HLSDiscSequence      bool   `json:"hlsDiscSequence",omitempty`
+	DashManifestPrefix   string `json:"dashManifestPrefix",omitempty`
+	PlaybackEndpoint     string `json:"playbackEndpoint",omitempty`
 }
 
 func (mtc MediaTailorConfiguration) String() string {
@@ -50,7 +52,7 @@ func Unmarshal(req *aws.Request) {
 		switch req.HTTPResponse.StatusCode {
 		case 200:
 			fmt.Println(string(data))
-			err := json.Unmarshal(data,req.Data)
+			err := json.Unmarshal(data, req.Data)
 			if err != nil {
 				req.Error = awserr.New("SerializationError", "failed decoding JSON RPC response", err)
 			}
