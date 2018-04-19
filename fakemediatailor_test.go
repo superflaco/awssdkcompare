@@ -16,7 +16,7 @@ var kwality_config = MediaTailorConfiguration{AdDecisionServer: "http://7baa3.v.
 func TestMediaTailor_GetConfigRequest(t *testing.T) {
 	config, configErr := external.LoadDefaultAWSConfig()
 	if nil == configErr {
-		config.Region = "us-east-1"
+		config.Region = MT_DEFAULT_REGION
 		//config.LogLevel = aws.LogDebug
 		fmt := New(config)
 		//fmt.AddDebugHandlers()

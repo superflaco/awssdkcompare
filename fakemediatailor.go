@@ -8,6 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 )
 
+const MT_DEFAULT_REGION  = "us-east-1"
+
 const opDescribeMTConfig = "GetConfig"
 
 type MediaTailorConfiguration struct {
