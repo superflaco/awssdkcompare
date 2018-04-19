@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 )
 
-const MT_DEFAULT_REGION  = "us-east-1"
+const MT_DEFAULT_REGION = "us-east-1"
 
 const opDescribeMTConfig = "GetConfig"
 
@@ -143,7 +143,6 @@ func (c *MediaTailor) PutConfigRequest(config string, configBody MediaTailorConf
 		Name:       opDescribeMTConfig,
 		HTTPMethod: "PUT",
 		HTTPPath:   "/v1/config/account/" + config,
-
 	}
 	var mtconfig MediaTailorConfiguration
 	return c.newRequest(op, &configBody, &mtconfig)

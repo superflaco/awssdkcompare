@@ -60,7 +60,7 @@ func TestMediaTailor_RoundTripConfigRequest(t *testing.T) {
 				mtConfig := getReq.Data.(*MediaTailorConfiguration)
 				if "" != mtConfig.DashManifestPrefix {
 					t.Log("Playback URL Prefix: ", mtConfig.DashManifestPrefix)
-					time.Sleep(time.Second/4)
+					time.Sleep(time.Second / 4)
 					delErr := fmt.DeleteConfigRequest(tts).Send()
 					if nil != delErr {
 						t.Log(delErr)
