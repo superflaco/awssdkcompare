@@ -19,6 +19,7 @@ type MediaTailorConfiguration struct {
 	CDNContentSegmentURL string `json:"cdnContentSegmentURL,omitempty"`
 	CDNAdSegmentURL      string `json:"cdnAdSegmentURL,omitempty"`
 	HLSDiscSequence      bool   `json:"hlsDiscSequence,omitempty"`
+	HLSManifestPrefix    string `json:"hlsManifestPrefix,omitempty"`
 	DashManifestPrefix   string `json:"dashManifestPrefix,omitempty"`
 	PlaybackEndpoint     string `json:"playbackEndpoint,omitempty"`
 }
@@ -85,7 +86,6 @@ func New(config aws.Config) *MediaTailor {
 	var signingName string
 	signingName = "mediatailor"
 	signingRegion := config.Region
-
 	svc := &MediaTailor{
 		Client: aws.NewClient(
 			config,
