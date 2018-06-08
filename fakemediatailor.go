@@ -10,18 +10,24 @@ import (
 
 const MT_DEFAULT_REGION = "us-east-1"
 
-const opDescribeMTConfig = "GetConfig"
-
 type MediaTailorConfiguration struct {
-	AdDecisionServer     string `json:"adDecisionServer,omitempty"`
-	OriginPrefix         string `json:"originPrefix,omitempty"`
-	SlateURL             string `json:"slateURL,omitempty"`
-	CDNContentSegmentURL string `json:"cdnContentSegmentURL,omitempty"`
-	CDNAdSegmentURL      string `json:"cdnAdSegmentURL,omitempty"`
-	HLSDiscSequence      bool   `json:"hlsDiscSequence,omitempty"`
-	HLSManifestPrefix    string `json:"hlsManifestPrefix,omitempty"`
-	DashManifestPrefix   string `json:"dashManifestPrefix,omitempty"`
-	PlaybackEndpoint     string `json:"playbackEndpoint,omitempty"`
+	SessionInitializationEndpointPrefix string     `json:"SessionInitializationEndpointPrefix,omitempty"`
+	AdDecisionServerUrl                 string     `json:"AdDecisionServerUrl,omitempty"`
+	VideoContentSourceUrl               string     `json:"VideoContentSourceUrl,omitempty"`
+	SlateAdURL                          string     `json:"SlateAdUrl,omitempty"`
+	CDNConfiguration                    *CDNConfig `json:"CdnConfiguration,omitempty"`
+	HlsConfiguration                    *HLSConfig `json:"HlsConfiguration,omitempty"`
+	PlaybackEndpointPrefix              string     `json:"PlaybackEndpointPrefix,omitempty"`
+	Name                                string     `json:"Name,omitempty"`
+}
+
+type CDNConfig struct {
+	AdSegmentURL            string `json:"AdSegmentURL,omitempty"`
+	ContentSegmentUrlPrefix string `json:"ContentSegmentUrlPrefix,omitempty"`
+}
+
+type HLSConfig struct {
+	ManifestEndpointPrefix string `json:"ManifestEndpointPrefix,omitempty"`
 }
 
 func (mtc MediaTailorConfiguration) String() string {
@@ -39,7 +45,7 @@ type MediaTailor struct {
 
 // Build builds a JSON payload for a JSON RPC request.
 func Build(req *aws.Request) {
-	req.HTTPRequest.URL.Host = "api." + req.HTTPRequest.URL.Host
+	//req.HTTPRequest.URL.Host = "api." + req.HTTPRequest.URL.Host
 	req.HTTPRequest.Header.Add("Content-Type", "application/json; charset=UTF-8")
 	if nil != req.Params {
 		body, bodyErr := json.Marshal(req.Params)
@@ -78,8 +84,8 @@ var initRequest func(*MediaTailor, *aws.Request)
 
 // Service information constants
 const (
-	ServiceName = "mediatailor" // Service endpoint prefix API calls made to.
-	EndpointsID = ServiceName   // Service ID for Regions and Endpoints metadata.
+	ServiceName = "api.mediatailor" // Service endpoint prefix API calls made to.
+	EndpointsID = ServiceName       // Service ID for Regions and Endpoints metadata.
 )
 
 func New(config aws.Config) *MediaTailor {
@@ -130,9 +136,9 @@ func (c *MediaTailor) newRequest(op *aws.Operation, params, data interface{}) *a
 
 func (c *MediaTailor) GetConfigRequest(config string) *aws.Request {
 	op := &aws.Operation{
-		Name:       opDescribeMTConfig,
+		Name:       "GetPlaybackConfiguration",
 		HTTPMethod: "GET",
-		HTTPPath:   "/v1/config/account/" + config,
+		HTTPPath:   "/playbackConfiguration/" + config,
 	}
 	var mtconfig MediaTailorConfiguration
 	return c.newRequest(op, nil, &mtconfig)
@@ -140,19 +146,20 @@ func (c *MediaTailor) GetConfigRequest(config string) *aws.Request {
 
 func (c *MediaTailor) PutConfigRequest(config string, configBody MediaTailorConfiguration) *aws.Request {
 	op := &aws.Operation{
-		Name:       opDescribeMTConfig,
+		Name:       "PutPlaybackConfiguration",
 		HTTPMethod: "PUT",
-		HTTPPath:   "/v1/config/account/" + config,
+		HTTPPath:   "/playbackConfiguration",
 	}
 	var mtconfig MediaTailorConfiguration
+	configBody.Name = config
 	return c.newRequest(op, &configBody, &mtconfig)
 }
 
 func (c *MediaTailor) DeleteConfigRequest(config string) *aws.Request {
 	op := &aws.Operation{
-		Name:       opDescribeMTConfig,
+		Name:       "DeletePlaybackConfiguration",
 		HTTPMethod: "DELETE",
-		HTTPPath:   "/v1/config/account/" + config,
+		HTTPPath:   "/playbackConfiguration/" + config,
 	}
 	var mtconfig MediaTailorConfiguration
 	return c.newRequest(op, nil, &mtconfig)
