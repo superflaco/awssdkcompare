@@ -108,6 +108,10 @@ func TestRealSDKRoundtrip(t *testing.T) {
 									getManiPrefix := *gethlsconf.ManifestEndpointPrefix
 									if "" != getManiPrefix {
 										t.Log("Got Prefix from GET call: ", getManiPrefix)
+										if getManiPrefix != putManiPrefix {
+											t.Log("Prefixes did not match")
+											t.Fail()
+										}
 										time.Sleep(time.Second / 4)
 										deleteInput := &mediatailor.DeletePlaybackConfigurationInput{Name: &tts}
 										deleteReq := realtailor.DeletePlaybackConfigurationRequest(deleteInput)
