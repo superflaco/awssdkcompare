@@ -74,6 +74,7 @@ func TestRealSDKRoundtrip(t *testing.T) {
 		realtailor := mediatailor.New(config)
 
 		tts := "RealSDKTestStream"
+
 		// As usual, the AWS API wants string pointers for no apparent reason since https://golang.org/pkg/encoding/json/#Marshal provides the following to omit empty values:
 		// 'The "omitempty" option specifies that the field should be omitted from the encoding if the field has an empty value, defined as false, 0, a nil pointer, a nil interface value, and any empty array, slice, map, or string.'
 		//
@@ -92,7 +93,7 @@ func TestRealSDKRoundtrip(t *testing.T) {
 				if nil != puthlsconf.ManifestEndpointPrefix {
 					putManiPrefix := *puthlsconf.ManifestEndpointPrefix
 					if "" != putManiPrefix {
-						t.Log(putManiPrefix)
+						t.Log("Got Prefix from PUT call:",putManiPrefix)
 						// ok, we found a playback/manifest prefix, now try a get to check we got same thing
 						// once again we have to setup an input object which really just has a single Name field
 						getInput := &mediatailor.GetPlaybackConfigurationInput{Name: &tts}
@@ -106,7 +107,7 @@ func TestRealSDKRoundtrip(t *testing.T) {
 								if nil != gethlsconf.ManifestEndpointPrefix {
 									getManiPrefix := *gethlsconf.ManifestEndpointPrefix
 									if "" != getManiPrefix {
-										t.Log(getManiPrefix)
+										t.Log("Got Prefix from GET call: ", getManiPrefix)
 										time.Sleep(time.Second / 4)
 										deleteInput := &mediatailor.DeletePlaybackConfigurationInput{Name: &tts}
 										deleteReq := realtailor.DeletePlaybackConfigurationRequest(deleteInput)
