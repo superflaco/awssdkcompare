@@ -25,8 +25,8 @@ func TestMediaTailor_GetConfigRequest(t *testing.T) {
 		sendErr := req.Send()
 		if nil == sendErr {
 			mtConfig := req.Data.(*MediaTailorConfiguration)
-			if "" != mtConfig.HlsConfiguration.ManifestEndpointPrefix {
-				t.Log("Playback URL Prefix: ", mtConfig.HlsConfiguration.ManifestEndpointPrefix)
+			if "" != mtConfig.Playback() {
+				t.Log("Playback URL Prefix: ", mtConfig.Playback())
 			} else {
 				t.Log("failed to find the playback url in the returned media tailor configuration", mtConfig)
 				t.Fail()
@@ -58,8 +58,8 @@ func TestMediaTailor_RoundTripConfigRequest(t *testing.T) {
 			sendErr := getReq.Send()
 			if nil == sendErr {
 				mtConfig := getReq.Data.(*MediaTailorConfiguration)
-				if "" != mtConfig.HlsConfiguration.ManifestEndpointPrefix {
-					t.Log("Playback URL Prefix: ", mtConfig.HlsConfiguration.ManifestEndpointPrefix)
+				if "" != mtConfig.Playback() {
+					t.Log("Playback URL Prefix: ", mtConfig.Playback())
 					time.Sleep(time.Second / 4)
 					delErr := fmt.DeleteConfigRequest(tts).Send()
 					if nil != delErr {

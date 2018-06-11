@@ -21,6 +21,13 @@ type MediaTailorConfiguration struct {
 	Name                                string     `json:"Name,omitempty"`
 }
 
+func (mtc MediaTailorConfiguration) Playback() string {
+	if nil == mtc.HlsConfiguration {
+		return ""
+	}
+	return mtc.HlsConfiguration.ManifestEndpointPrefix
+}
+
 type CDNConfig struct {
 	AdSegmentURL            string `json:"AdSegmentURL,omitempty"`
 	ContentSegmentUrlPrefix string `json:"ContentSegmentUrlPrefix,omitempty"`
