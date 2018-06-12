@@ -93,7 +93,7 @@ func TestRealSDKRoundtrip(t *testing.T) {
 				if nil != puthlsconf.ManifestEndpointPrefix {
 					putManiPrefix := *puthlsconf.ManifestEndpointPrefix
 					if "" != putManiPrefix {
-						t.Log("Got Prefix from PUT call:",putManiPrefix)
+						t.Log("Got Prefix from PUT call:", putManiPrefix)
 						// ok, we found a playback/manifest prefix, now try a get to check we got same thing
 						// once again we have to setup an input object which really just has a single Name field
 						getInput := &mediatailor.GetPlaybackConfigurationInput{Name: &tts}
