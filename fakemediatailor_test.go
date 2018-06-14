@@ -30,7 +30,7 @@ func TestFakeSDKRoundtrip(t *testing.T) {
 	config, configErr := prepDefaultConfig()
 	if configErr != nil {
 		t.Error(configErr)
-		t.Fail()
+		t.FailNow()
 	}
 
 	faketailor := New(config)
@@ -41,7 +41,7 @@ func TestFakeSDKRoundtrip(t *testing.T) {
 	putErr := putReq.Send()
 	if putErr != nil {
 		t.Log(putErr)
-		t.Fail()
+		t.FailNow()
 	}
 
 	// sleeping to avoid throttling limits
@@ -51,13 +51,13 @@ func TestFakeSDKRoundtrip(t *testing.T) {
 	sendErr := getReq.Send()
 	if sendErr != nil {
 		t.Error(sendErr)
-		t.Fail()
+		t.FailNow()
 	}
 
 	mtConfig := getReq.Data.(*MediaTailorConfiguration)
 	if mtConfig.Playback() == "" {
 		t.Log("failed to find the playback url in the returned media tailor configuration", mtConfig)
-		t.Fail()
+		t.FailNow()
 	}
 
 	t.Log("Playback URL Prefix: ", mtConfig.Playback())
@@ -66,7 +66,7 @@ func TestFakeSDKRoundtrip(t *testing.T) {
 	delErr := faketailor.DeleteConfigRequest(tts).Send()
 	if delErr != nil {
 		t.Log(delErr)
-		t.Fail()
+		t.FailNow()
 	}
 }
 
@@ -75,7 +75,7 @@ func TestRealSDKRoundtrip(t *testing.T) {
 	config, configErr := prepDefaultConfig()
 	if configErr != nil {
 		t.Error(configErr)
-		t.Fail()
+		t.FailNow()
 	}
 
 	realtailor := mediatailor.New(config)
@@ -98,7 +98,7 @@ func TestRealSDKRoundtrip(t *testing.T) {
 	putResp, putErr := putReq.Send()
 	if putErr != nil {
 		t.Log(putErr)
-		t.Fail()
+		t.FailNow()
 	}
 	// sleeping to avoid throttling limits
 	time.Sleep(time.Second / 4)
@@ -107,14 +107,14 @@ func TestRealSDKRoundtrip(t *testing.T) {
 
 	if puthlsconf == nil || puthlsconf.ManifestEndpointPrefix == nil {
 		t.Log("Failed to find a ManifestEndpointPrefix in the HlsConfiguration (PUT)")
-		t.Fail()
+		t.FailNow()
 	}
 
 	putManiPrefix := *puthlsconf.ManifestEndpointPrefix
 
 	if putManiPrefix == "" {
 		t.Log("Failed to get a Prefix from PUT call")
-		t.Fail()
+		t.FailNow()
 	}
 
 	t.Log("Got Prefix from PUT call:", putManiPrefix)
@@ -126,7 +126,7 @@ func TestRealSDKRoundtrip(t *testing.T) {
 
 	if getErr != nil {
 		t.Log(getErr)
-		t.Fail()
+		t.FailNow()
 	}
 
 	// we could easily make a function to handle both Get and Put responses if they were the
@@ -135,14 +135,14 @@ func TestRealSDKRoundtrip(t *testing.T) {
 
 	if gethlsconf == nil || gethlsconf.ManifestEndpointPrefix == nil {
 		t.Log("Failed to find a ManifestEndpointPrefix in the HlsConfiguration (GET)")
-		t.Fail()
+		t.FailNow()
 	}
 
 	getManiPrefix := *gethlsconf.ManifestEndpointPrefix
 
 	if getManiPrefix == "" {
 		t.Log("Failed to get a Prefix from GET call")
-		t.Fail()
+		t.FailNow()
 	}
 
 	t.Log("Got Prefix from GET call: ", getManiPrefix)
@@ -154,6 +154,6 @@ func TestRealSDKRoundtrip(t *testing.T) {
 	_, deleteErr := deleteReq.Send()
 	if deleteErr != nil {
 		t.Log(deleteErr)
-		t.Fail()
+		t.FailNow()
 	}
 }
