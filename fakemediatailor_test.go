@@ -1,11 +1,12 @@
 package fakemediatailor
 
 import (
+	"testing"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
-	"testing"
-	"time"
 )
 
 var facepalm_config = MediaTailorConfiguration{AdDecisionServerUrl: "http://7baa3.v.fwmrm.net/ad/g/1?nw=506531\u0026mode=live\u0026prof=96749:global-cocoa\u0026caid=facepalm_tv\u0026csid=ad_plethora\u0026resp=vast2\u0026pvrn=[avail.random]\u0026vprn=[avail.random]\u0026vdty=variable\u0026vrdu=[session.avail_duration_secs];;slid=mid\u0026tpcl=MIDROLL\u0026ptgt=a\u0026cpsq=[avail_num]\u0026mind=[session.avail_duration_secs]\u0026maxd=[session.avail_duration_secs]",
@@ -25,120 +26,134 @@ func prepDefaultConfig() (aws.Config, error) {
 }
 
 func TestFakeSDKRoundtrip(t *testing.T) {
+
 	config, configErr := prepDefaultConfig()
-	if nil == configErr {
-
-		faketailor := New(config)
-		faketailor.AddDebugHandlers()
-
-		tts := "FakeSDKTestStream"
-
-		putReq := faketailor.PutConfigRequest(tts, kwality_config)
-		var putErr = putReq.Send()
-		if nil == putErr {
-			// sleeping to avoid throttling limits
-			time.Sleep(time.Second / 4)
-			getReq := faketailor.GetConfigRequest(tts)
-			sendErr := getReq.Send()
-			if nil == sendErr {
-				mtConfig := getReq.Data.(*MediaTailorConfiguration)
-				if "" != mtConfig.Playback() {
-					t.Log("Playback URL Prefix: ", mtConfig.Playback())
-					time.Sleep(time.Second / 4)
-					delErr := faketailor.DeleteConfigRequest(tts).Send()
-					if nil != delErr {
-						t.Log(delErr)
-						t.Fail()
-					}
-				} else {
-					t.Log("failed to find the playback url in the returned media tailor configuration", mtConfig)
-					t.Fail()
-				}
-			} else {
-				t.Error(sendErr)
-				t.Fail()
-			}
-		} else {
-			t.Log(putErr)
-			t.Fail()
-		}
-	} else {
+	if configErr != nil {
 		t.Error(configErr)
-		t.Fail()
+		t.FailNow()
+	}
+
+	faketailor := New(config)
+	faketailor.AddDebugHandlers()
+	tts := "FakeSDKTestStream"
+
+	putReq := faketailor.PutConfigRequest(tts, kwality_config)
+	putErr := putReq.Send()
+	if putErr != nil {
+		t.Log(putErr)
+		t.FailNow()
+	}
+
+	// sleeping to avoid throttling limits
+	time.Sleep(time.Second / 4)
+	getReq := faketailor.GetConfigRequest(tts)
+
+	sendErr := getReq.Send()
+	if sendErr != nil {
+		t.Error(sendErr)
+		t.FailNow()
+	}
+
+	mtConfig := getReq.Data.(*MediaTailorConfiguration)
+	if mtConfig.Playback() == "" {
+		t.Log("failed to find the playback url in the returned media tailor configuration", mtConfig)
+		t.FailNow()
+	}
+
+	t.Log("Playback URL Prefix: ", mtConfig.Playback())
+	time.Sleep(time.Second / 4)
+
+	delErr := faketailor.DeleteConfigRequest(tts).Send()
+	if delErr != nil {
+		t.Log(delErr)
+		t.FailNow()
 	}
 }
 
 func TestRealSDKRoundtrip(t *testing.T) {
+
 	config, configErr := prepDefaultConfig()
-	if nil == configErr {
-		realtailor := mediatailor.New(config)
+	if configErr != nil {
+		t.Error(configErr)
+		t.FailNow()
+	}
 
-		tts := "RealSDKTestStream"
+	realtailor := mediatailor.New(config)
+	tts := "RealSDKTestStream"
 
-		// As usual, the AWS API wants string pointers for no apparent reason since https://golang.org/pkg/encoding/json/#Marshal provides the following to omit empty values:
-		// 'The "omitempty" option specifies that the field should be omitted from the encoding if the field has an empty value, defined as false, 0, a nil pointer, a nil interface value, and any empty array, slice, map, or string.'
-		//
-		// In this case, users are required to create an input and then a request which seems a bit cumbersome
-		// especially when the put input is basically a subset of  the get input so folks are stuck converting between
-		// essentially identical objects
-		putInput := &mediatailor.PutPlaybackConfigurationInput{Name: &tts, VideoContentSourceUrl: &facepalm_config.VideoContentSourceUrl, AdDecisionServerUrl: &facepalm_config.AdDecisionServerUrl, SlateAdUrl: &facepalm_config.SlateAdURL}
-		putReq := realtailor.PutPlaybackConfigurationRequest(putInput)
-		putResp, putErr := putReq.Send()
-		if nil == putErr {
-			// sleeping to avoid throttling limits
-			time.Sleep(time.Second / 4)
-			// note that the putResp is a *PutPlaybackConfigurationOutput which sure looks a lot like a *GetPlaybackConfigurationOutput yet we are stuck using two different structs
-			puthlsconf := putResp.HlsConfiguration
-			if nil != puthlsconf {
-				if nil != puthlsconf.ManifestEndpointPrefix {
-					putManiPrefix := *puthlsconf.ManifestEndpointPrefix
-					if "" != putManiPrefix {
-						t.Log("Got Prefix from PUT call:", putManiPrefix)
-						// ok, we found a playback/manifest prefix, now try a get to check we got same thing
-						// once again we have to setup an input object which really just has a single Name field
-						getInput := &mediatailor.GetPlaybackConfigurationInput{Name: &tts}
-						getReq := realtailor.GetPlaybackConfigurationRequest(getInput)
-						getResp, getErr := getReq.Send()
-						if nil == getErr {
-							// we could easily make a function to handle both Get and Put responses if they were the
-							// same struct, at least the HlsConfiguration is consistent between them
-							gethlsconf := getResp.HlsConfiguration
-							if nil != gethlsconf {
-								if nil != gethlsconf.ManifestEndpointPrefix {
-									getManiPrefix := *gethlsconf.ManifestEndpointPrefix
-									if "" != getManiPrefix {
-										t.Log("Got Prefix from GET call: ", getManiPrefix)
-										if getManiPrefix != putManiPrefix {
-											t.Log("Prefixes did not match")
-											t.Fail()
-										}
-										time.Sleep(time.Second / 4)
-										deleteInput := &mediatailor.DeletePlaybackConfigurationInput{Name: &tts}
-										deleteReq := realtailor.DeletePlaybackConfigurationRequest(deleteInput)
-										_, deleteErr := deleteReq.Send()
-										if nil != deleteErr {
-											t.Log(deleteErr)
-											t.Fail()
-										}
-										return
-									}
-								}
-							}
-						} else {
-							t.Log(getErr)
-							t.Fail()
-						}
-					}
-				}
-			}
-			t.Log("Failed to find a ManifestEndpointPrefix in the HlsConfiguration")
-			t.Fail()
-		} else {
-			t.Log(putErr)
-			t.Fail()
-		}
-	} else {
-		t.Log(configErr)
-		t.Fail()
+	// As usual, the AWS API wants string pointers for no apparent reason since https://golang.org/pkg/encoding/json/#Marshal provides the following to omit empty values:
+	// 'The "omitempty" option specifies that the field should be omitted from the encoding if the field has an empty value, defined as false, 0, a nil pointer, a nil interface value, and any empty array, slice, map, or string.'
+	//
+	// In this case, users are required to create an input and then a request which seems a bit cumbersome
+	// especially when the put input is basically a subset of  the get input so folks are stuck converting between
+	// essentially identical objects
+	putInput := &mediatailor.PutPlaybackConfigurationInput{
+		Name: &tts,
+		VideoContentSourceUrl: &facepalm_config.VideoContentSourceUrl,
+		AdDecisionServerUrl:   &facepalm_config.AdDecisionServerUrl,
+		SlateAdUrl:            &facepalm_config.SlateAdURL,
+	}
+
+	putReq := realtailor.PutPlaybackConfigurationRequest(putInput)
+	putResp, putErr := putReq.Send()
+	if putErr != nil {
+		t.Log(putErr)
+		t.FailNow()
+	}
+	// sleeping to avoid throttling limits
+	time.Sleep(time.Second / 4)
+	// note that the putResp is a *PutPlaybackConfigurationOutput which sure looks a lot like a *GetPlaybackConfigurationOutput yet we are stuck using two different structs
+	puthlsconf := putResp.HlsConfiguration
+
+	if puthlsconf == nil || puthlsconf.ManifestEndpointPrefix == nil {
+		t.Log("Failed to find a ManifestEndpointPrefix in the HlsConfiguration (PUT)")
+		t.FailNow()
+	}
+
+	putManiPrefix := *puthlsconf.ManifestEndpointPrefix
+
+	if putManiPrefix == "" {
+		t.Log("Failed to get a Prefix from PUT call")
+		t.FailNow()
+	}
+
+	t.Log("Got Prefix from PUT call:", putManiPrefix)
+	// ok, we found a playback/manifest prefix, now try a get to check we got same thing
+	// once again we have to setup an input object which really just has a single Name field
+	getInput := &mediatailor.GetPlaybackConfigurationInput{Name: &tts}
+	getReq := realtailor.GetPlaybackConfigurationRequest(getInput)
+	getResp, getErr := getReq.Send()
+
+	if getErr != nil {
+		t.Log(getErr)
+		t.FailNow()
+	}
+
+	// we could easily make a function to handle both Get and Put responses if they were the
+	// same struct, at least the HlsConfiguration is consistent between them
+	gethlsconf := getResp.HlsConfiguration
+
+	if gethlsconf == nil || gethlsconf.ManifestEndpointPrefix == nil {
+		t.Log("Failed to find a ManifestEndpointPrefix in the HlsConfiguration (GET)")
+		t.FailNow()
+	}
+
+	getManiPrefix := *gethlsconf.ManifestEndpointPrefix
+
+	if getManiPrefix == "" {
+		t.Log("Failed to get a Prefix from GET call")
+		t.FailNow()
+	}
+
+	t.Log("Got Prefix from GET call: ", getManiPrefix)
+
+	time.Sleep(time.Second / 4)
+	deleteInput := &mediatailor.DeletePlaybackConfigurationInput{Name: &tts}
+	deleteReq := realtailor.DeletePlaybackConfigurationRequest(deleteInput)
+
+	_, deleteErr := deleteReq.Send()
+	if deleteErr != nil {
+		t.Log(deleteErr)
+		t.FailNow()
 	}
 }
